@@ -1,6 +1,7 @@
 org.apache.kafka.controller.AclControlManagerTest:
 - testAddAndDelete
 - testCreateAclDeleteAcl
+- testCreateAclWithCidrHosts
 - testCreateDedupe
 - testDeleteDedupe
 - testDeleteExceedsMaxRecords
@@ -8,6 +9,9 @@ org.apache.kafka.controller.AclControlManagerTest:
 - testValidateAclWithBadPrincipal
 - testValidateAclWithEmptyPrincipal
 - testValidateFilter
+- testValidateHostPatternCidrNotSupported
+- testValidateHostPatternInvalid
+- testValidateHostPatternValid
 - testValidateNewAcl
 org.apache.kafka.controller.ActivationRecordsGeneratorTest:
 - testActivationMessageForEmptyLog
@@ -85,17 +89,25 @@ org.apache.kafka.controller.ClusterControlManagerTest:
 - testReplayBrokerRegistrationChangeRecord
 - testReplayRegisterBrokerRecord
 - testUnregister
+- testUnregisterController
+- testUnregisterControllerWithUnsupportedMetadataVersion
+- testUnregisterUnknownController
 org.apache.kafka.controller.ConfigurationControlManagerTest:
+- testCordonedLogDirsFeature
 - testElrUpgrade
 - testIncrementalAlterConfig
 - testIncrementalAlterConfigs
 - testIncrementalAlterConfigsWithPolicy
 - testIncrementalAlterConfigsWithoutExistence
 - testIncrementalAlterMultipleConfigValues
+- testIsCordonedLogDirsDisabled
+- testIsCordonedLogDirsInvalid
 - testLegacyAlterConfigs
 - testMaybeGenerateElrSafetyRecords
 - testRejectMinIsrChangeWhenElrEnabled
 - testReplay
+- testReplayFiltersInvalidConfigs
+- testValidateAlterConfigWithInvalidExistingConfigs
 org.apache.kafka.controller.EventPerformanceMonitorTest:
 - testDefaultPeriodNs
 - testDoNotLogFastEvent
@@ -162,6 +174,7 @@ org.apache.kafka.controller.PartitionChangeBuilderTest:
 - testEligibleLeaderReplicas_IsrShrinkBelowMinISR
 - testEligibleLeaderReplicas_NotEligibleLastKnownLeader
 - testEligibleLeaderReplicas_RemoveUncleanShutdownReplicasFromElr
+- testEligibleLeaderReplicas_lastKnownElrShouldBePopulatedWhenNoLeader
 - testIsrChangeAndLeaderChange
 - testIsrChangeDoesntBumpLeaderEpoch
 - testIsrEnlargementCompletesReassignment
@@ -183,11 +196,17 @@ org.apache.kafka.controller.PartitionChangeBuilderTest:
 org.apache.kafka.controller.PartitionReassignmentReplicasTest:
 - testAdditions
 - testAdditionsAndRemovals
-- testDoesCompleteReassignmentAllNewReplicas
-- testDoesCompleteReassignmentSomeNewReplicas
+- testCanCompleteReassignmentAllNewReplicas
+- testCanCompleteReassignmentIfIsrDoesNotHaveAnExistingTargetReplica
+- testCanCompleteReassignmentIfIsrDoesNotHaveBothExistingTargetReplica
+- testCanCompleteReassignmentSomeNewReplicas
+- testCanCompleteReassignmentWhenReplicationFactorIncreasesAndMissingAnExistingTargetReplicaFromIsr
 - testDoesNotCompleteReassignment
-- testDoesNotCompleteReassignmentIfIsrDoesNotHaveAllTargetReplicas
+- testDoesNotCompleteReassignmentIfIsrDoesNotHaveAnAddingTargetReplica
 - testDoesNotCompleteReassignmentIfNoneOngoing
+- testDoesNotCompleteReassignmentWhenReplicationFactorDecreasesAndMissingAnAddingReplicasFromISR
+- testDoesNotCompleteReassignmentWhenReplicationFactorDecreasesAndMissingAnExistingTargetReplicaFromIsr
+- testDoesNotCompleteReassignmentWhenReplicationFactorIncreasesAndMissingAnAddingReplicaFromIsr
 - testIsReassignmentInProgress
 - testNoneAddedOrRemoved
 - testOriginalReplicas
@@ -240,6 +259,7 @@ org.apache.kafka.controller.QuorumControllerTest:
 - testFatalMetadataReplayErrorOnActive
 - testFenceMultipleBrokers
 - testInsertBootstrapRecordsToEmptyLog
+- testIsNodeIdRegisteredWithDynamicQuorum
 - testMinIsrUpdateWithElr
 - testNoOpRecordWriteAfterTimeout
 - testRegisterBrokerKRaftVersions
@@ -248,13 +268,17 @@ org.apache.kafka.controller.QuorumControllerTest:
 - testUncleanShutdownBrokerElrEnabled
 - testUncleanShutdownElrDisabled
 - testUnregisterBroker
+- testUnregisterControllerInVoterSet
 org.apache.kafka.controller.QuorumFeaturesTest:
 - ensureDefaultSupportedFeaturesRangeMaxNotZero
 - testDefaultFeatureMap
 - testDefaultFeatureMapWithUnstable
-- testIsControllerId
+- testIsVoterId
 - testLocalSupportedFeature
 - testReasonNotSupported
+- testVoterIdsAreSuppliedOnEveryCall
+org.apache.kafka.controller.RaftClientVotersSupplierTest:
+- testVoterSupplier
 org.apache.kafka.controller.ReplicationControlManagerTest:
 - testAlterPartitionDisallowReplicationFactorChange
 - testAlterPartitionHandleUnknownTopicIdOrName
@@ -296,6 +320,7 @@ org.apache.kafka.controller.ReplicationControlManagerTest:
 - testFenceMultipleBrokers
 - testHandleAssignReplicasToDirs
 - testHandleAssignReplicasToDirsFailsOnOlderMv
+- testHandleDirectoriesCordoned
 - testHandleDirectoriesOffline
 - testInvalidAlterPartitionRequests
 - testInvalidCreateTopicsWithValidateOnlyFlag
@@ -310,6 +335,7 @@ org.apache.kafka.controller.ReplicationControlManagerTest:
 - testRemoveLeaderships
 - testShrinkAndExpandIsr
 - testTopicNameCollision
+- testTotalNumberOfPartitionsValidationDoesNotOverflow
 - testValidateBadManualPartitionAssignments
 - testValidateGoodManualPartitionAssignments
 - testValidateNewTopicNames
@@ -385,6 +411,7 @@ org.apache.kafka.controller.metrics.ControllerMetricsChangesTest:
 - testTopicChange
 - testTopicElectionResult
 org.apache.kafka.controller.metrics.QuorumControllerMetricsTest:
+- testAvgIdleRatio
 - testLastAppliedRecordMetrics
 - testMetricNames
 - testTimeSinceLastHeartbeatReceivedMs
@@ -401,10 +428,22 @@ org.apache.kafka.image.AclsImageTest:
 - testImage1RoundTrip
 - testImage2RoundTrip
 org.apache.kafka.image.ClientQuotasImageTest:
+- client
+- ip
 - testApplyDelta1
+- testDescribeNonStrictEmptyRequest
+- testDescribeWithDefaultMatchNonNullMatch
+- testDescribeWithDuplicateEntityType
+- testDescribeWithEmptyEntityType
+- testDescribeWithExactMatchNullMatch
+- testDescribeWithNonStrictTypeMatch
+- testDescribeWithSpecifiedMatchNonNullMatch
+- testDescribeWithStrictMode
+- testDescribeWithUnknownMatchType
 - testEmptyImageRoundTrip
 - testImage1RoundTrip
 - testImage2RoundTrip
+- user
 org.apache.kafka.image.ClusterImageTest:
 - testApplyDelta1
 - testApplyDelta2
@@ -417,6 +456,8 @@ org.apache.kafka.image.ClusterImageTest:
 - testImage3RoundTrip
 org.apache.kafka.image.ConfigurationsImageTest:
 - testApplyDelta1
+- testConfigurationDeltaFiltering
+- testConfigurationDeltaWithoutFiltering
 - testEmptyImageRoundTrip
 - testImage1RoundTrip
 - testImage2RoundTrip
@@ -448,6 +489,9 @@ org.apache.kafka.image.MetadataImageTest:
 - testImage1RoundTrip
 - testImage2RoundTrip
 org.apache.kafka.image.MetadataVersionChangeTest:
+- testConstructorThrowsExceptionWhenBothVersionsAreNull
+- testConstructorThrowsExceptionWhenNewVersionIsNull
+- testConstructorThrowsExceptionWhenOldVersionIsNull
 - testIsDowngrade
 - testIsUpgrade
 - testMetadataVersionChangeExceptionToString
@@ -476,10 +520,13 @@ org.apache.kafka.image.TopicsImageTest:
 - testImage1RoundTrip
 - testImage2RoundTrip
 - testLocalReassignmentChanges
+- testPartitionReplicas
+- testPartitionReplicasWithEmptyImage
 - testTopicDeltaElectionStatsWithEmptyImage
 - testTopicDeltaElectionStatsWithNonEmptyImage
 - testTopicIdToNameView
 - testTopicNameToIdView
+- testTopicsDeltaCreateThenDelete
 - testUpdatedLeaders
 org.apache.kafka.image.loader.MetadataBatchLoaderTest:
 - testAlignedTransactionBatches
@@ -491,6 +538,7 @@ org.apache.kafka.image.loader.MetadataBatchLoaderTest:
 - testUnexpectedAbortTransaction
 - testUnexpectedBeginTransaction
 - testUnexpectedEndTransaction
+- testUnsupportedConfigFilteredInBatch
 org.apache.kafka.image.loader.MetadataLoaderTest:
 - testCatchingUpState
 - testCreateAndClose
@@ -506,7 +554,10 @@ org.apache.kafka.image.loader.MetadataLoaderTest:
 - testReloadSnapshot
 - testRemovePublisher
 - testSnapshotDuringTransaction
+- testUnsupportedConfigFilteredInCommit
+- testUnsupportedConfigFilteredInSnapshot
 org.apache.kafka.image.loader.metrics.MetadataLoaderMetricsTest:
+- testAvgIdleRatio
 - testFinalizedFeatureLevelMetrics
 - testInitialValueOfCurrentControllerId
 - testManagedMetrics
@@ -632,10 +683,14 @@ org.apache.kafka.metadata.BrokerRegistrationInControlledShutdownChangeTest:
 - testValueRoundTrip
 - testValues
 org.apache.kafka.metadata.BrokerRegistrationTest:
+- testCordonedDirChanged
+- testCordonedDirectories
+- testCordonedLogDirsRoundTrip
 - testDirectoriesAreSorted
 - testEquals
 - testFromRecordAndToRecord
 - testHasOnlineDir
+- testHasUncordonedDirs
 - testToNode
 - testToString
 - testValues
@@ -698,6 +753,23 @@ org.apache.kafka.metadata.ListenerInfoTest:
 - testToControllerRegistrationRequestFailsOnNullHost
 - testToControllerRegistrationRequestFailsOnZeroPort
 - testToString
+org.apache.kafka.metadata.MetadataCacheTest:
+- getAliveBrokersShouldNotBeMutatedByUpdateCache
+- getTopicMetadata
+- getTopicMetadataIsrNotAvailable
+- getTopicMetadataNonExistingTopics
+- getTopicMetadataPartitionLeaderNotAvailable
+- getTopicMetadataPartitionListenerNotAvailableOnLeader
+- getTopicMetadataReplicaNotAvailable
+- getTopicMetadataWithNonSupportedSecurityProtocol
+- testDescribeTopicResponse
+- testGetLeaderAndIsr
+- testGetLiveBrokerEpoch
+- testGetOfflineReplicasConsidersDirAssignment
+- testGetPartitionReplicaEndpoints
+- testIsBrokerFenced
+- testIsBrokerInControlledShutdown
+- testToClusterIncludesFencedReplicasAsOffline
 org.apache.kafka.metadata.MetadataRecordSerdeTest:
 - testDeserializeWithUnhandledFrameVersion
 - testParsingMalformedFrameVersionVarint
@@ -708,6 +780,10 @@ org.apache.kafka.metadata.MetadataRecordSerdeTest:
 - testParsingUnsupportedApiKey
 - testParsingVersionTooLarge
 - testSerde
+org.apache.kafka.metadata.MetadataVersionConfigValidatorTest:
+- testInvokesFaultHandlerOnException
+- testValidateWithMetadataVersionJbodSupport
+- testValidatesConfigOnMetadataChange
 org.apache.kafka.metadata.MockConfigRepositoryTest:
 - testEmptyRepository
 - testSetTopicConfig
@@ -722,6 +798,7 @@ org.apache.kafka.metadata.PartitionRegistrationTest:
 - testBuilderThrowsIllegalStateExceptionWhenMissingLeaderRecoveryState
 - testBuilderThrowsIllegalStateExceptionWhenMissingPartitionEpoch
 - testBuilderThrowsIllegalStateExceptionWhenMissingReplicas
+- testConsistentEqualsAndHashCode
 - testDirectories
 - testElectionWasUnclean
 - testMergePartitionChangeRecordWithReassignmentData
@@ -769,12 +846,20 @@ org.apache.kafka.metadata.authorizer.StandardAclTest:
 org.apache.kafka.metadata.authorizer.StandardAclWithIdTest:
 - testEquals
 - testToRecordRoundTrips
+org.apache.kafka.metadata.authorizer.StandardAuthorizerPropertyTest:
+- matchingLiteralAllowWithNoMatchingDenyRules
+- matchingLiteralDenyOverridesAllAllowRules
+- matchingPrefixAllowWithNoMatchingDenyRules
+- matchingPrefixDenyOverridesAllAllowRules
 org.apache.kafka.metadata.authorizer.StandardAuthorizerTest:
+- testAclWithCidrHost
+- testAclWithIpv6CidrHost
 - testAllowAuditLogging
 - testAllowEveryoneIfNoAclFoundConfigDisabled
 - testAllowEveryoneIfNoAclFoundConfigEnabled
 - testAuthorizationPriorToCompleteInitialLoad
 - testAuthorizationWithManyAcls
+- testAuthorizeByResourceTypeWithCidrHost
 - testAuthorizerMetrics
 - testCompleteInitialLoad
 - testCompleteInitialLoadWithException
@@ -787,24 +872,30 @@ org.apache.kafka.metadata.authorizer.StandardAuthorizerTest:
 - testGetDefaultResult
 - testHostAddressAclValidation
 - testListAcls
+- testOverlappingCidrAllowNarrowDenyWide
+- testOverlappingCidrDenyNarrowAllowWide
+- testOverlappingCidrSamePermissionBothAllow
+- testOverlappingCidrWithWildcardAllow
 - testPrefixAcls
 - testSimpleAuthorizations
 - testStartWithEarlyStartListeners
 - testTopicAclWithOperationAll
-org.apache.kafka.metadata.bootstrap.BootstrapDirectoryTest:
-- testMissingDirectory
-- testReadFromConfigurationFile
-- testReadFromEmptyConfiguration
 org.apache.kafka.metadata.bootstrap.BootstrapMetadataTest:
 - testCopyWithModifiedFeatureRecord
 - testCopyWithNewFeatureRecord
 - testFeatureLevelForFeature
 - testFeatureLevelForFeatureThatIsNotSet
 - testFeatureLevelForMetadataVersion
+- testFromCheckpointFileNotFound
+- testFromDirectoryWithLegacyBootstrapCheckpoint
 - testFromRecordsList
 - testFromRecordsListWithOldMetadataVersion
 - testFromRecordsListWithoutMetadataVersion
 - testFromVersion
+- testFromVersions
+- testFromVersionsExcludesZeroLevelFeatures
+- testMissingDirectory
+- testReadFromEmptyDirectory
 org.apache.kafka.metadata.placement.PartitionAssignmentTest:
 - testConsistentEqualsAndHashCode
 - testPartitionAssignmentReplicas
@@ -828,86 +919,19 @@ org.apache.kafka.metadata.placement.TopicAssignmentTest:
 - testConsistentEqualsAndHashCode
 - testToString
 - testTopicAssignmentReplicas
-org.apache.kafka.metadata.properties.MetaPropertiesEnsembleTest:
-- testClusterIdForEmpty
-- testClusterIdForFoo
-- testCopierGenerateValidDirectoryId
-- testCopierVerificationFailsOnEmptyAndErrorOverlap
-- testCopierVerificationFailsOnEmptyAndLogDirsOverlap
-- testCopierVerificationFailsOnErrorAndLogDirsOverlap
-- testCopierWithoutModifications
-- testCopierWriteChanged
-- testCopierWriteLogDirChanges
-- testCopyFooItemByItem
-- testEmptyLogDirsForEmpty
-- testEmptyLogDirsForFoo
-- testErrorLogDirsForEmpty
-- testErrorLogDirsForFoo
-- testLogDirPropsForEmpty
-- testLogDirPropsForFoo
-- testMetaPropertiesEnsembleLoad
-- testMetaPropertiesEnsembleLoadEmpty
-- testMetaPropertiesEnsembleLoadError
-- testMetadataLogDirForEmpty
-- testMetadataLogDirForFoo
-- testNodeIdForEmpty
-- testNodeIdForFoo
-- testNonFailedDirectoryPropsForEmpty
-- testNonFailedDirectoryPropsForFoo
-- testSuccessfulVerification
-- testSuccessfulVerificationWithClusterId
-- testSuccessfulVerificationWithClusterIdAndNodeId
-- testVerificationFailureOnLackOfMetadataLogDir
-- testVerificationFailureOnMetadataLogDirWithError
-- testVerificationFailureOnRequireAtLeastOneValid
-- testVerificationFailureOnRequireV0
-org.apache.kafka.metadata.properties.MetaPropertiesTest:
-- testClusterIdRequiredInV1
-- testNodeIdRequiredInV1
-- testV0SerializationWithAll
-- testV0SerializationWithJustClusterId
-- testV0SerializationWithJustClusterIdAndNodeId
-- testV0SerializationWithJustNodeId
-- testV0SerializationWithNothing
-- testV1SerializationWithDirectoryId
-- testV1SerializationWithNonUuidClusterId
-- testV1SerializationWithoutDirectoryId
-org.apache.kafka.metadata.properties.MetaPropertiesVersionTest:
-- testAlwaysHasClusterId
-- testAlwaysHasNodeId
-- testFromInvalidNumber
-- testFromInvalidString
-- testHasBrokerId
-- testV0FromNumber
-- testV0FromNumberString
-- testV0ToNumber
-- testV0ToNumberString
-- testV1FromNumber
-- testV1FromNumberString
-- testV1ToNumber
-- testV1ToNumberString
-org.apache.kafka.metadata.properties.PropertiesUtilsTest:
-- loadMissingRequiredIntProp
-- loadNonIntegerRequiredIntProp
-- loadRequiredIntProp
-- testReadPropertiesFile
-- testWritePropertiesFile
 org.apache.kafka.metadata.storage.FormatterTest:
 - testDirectories
 - testFeatureFlag
 - testFormatElrEnabledWithMetadataVersions
 - testFormatWithInitialVoters
 - testFormatWithInitialVotersFailsWithOlderKraftVersion
-- testFormatWithInitialVotersFailsWithOlderMetadataVersion
+- testFormatWithInitialVotersWithOlderMetadataVersion
 - testFormatWithNoInitialControllers
-- testFormatWithNoInitialControllersFailsWithOlderKraftVersion
+- testFormatWithNoInitialControllersWithOlderMetadataVersion
 - testFormatWithOlderReleaseVersion
 - testFormatWithScram
 - testFormatWithScramFailsOnUnsupportedReleaseVersions
-- testFormatWithUnstableReleaseVersion
-- testFormatWithUnstableReleaseVersionFailsWithoutEnableUnstable
-- testFormatWithoutInitialVotersFailsWithNewerKraftVersion
-- testFormatWithoutNoInitialControllersFailsWithNewerKraftVersion
+- testFormatWithStaticQuorumFailsWithNewerKraftVersion
 - testFormatterFailsOnAlreadyFormatted
 - testFormatterFailsOnUnwritableDirectory
 - testFormattingCreatesLogDirId
@@ -915,7 +939,9 @@ org.apache.kafka.metadata.storage.FormatterTest:
 - testInvalidFeatureFlag
 - testOneDirectoryFormattedAndOthersNotFormatted
 - testOneDirectoryFormattedAndOthersNotFormattedWithIgnoreFormatted
+- testSkipsBootstrapSnapshotWhenDisabled
 - testStandaloneWithIgnoreFormatted
+- testWritesBootstrapSnapshotOnlyToMetadataDirectory
 org.apache.kafka.metadata.storage.ScramParserTest:
 - testConfiguredIterations
 - testConfiguredSalt

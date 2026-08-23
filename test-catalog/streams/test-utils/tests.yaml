@@ -1,16 +1,22 @@
 org.apache.kafka.streams.KeyValueStoreFacadeTest:
 - shouldDeleteAndReturnPlainValue
 - shouldForwardClose
+- shouldForwardCommit
 - shouldForwardFlush
 - shouldForwardInit
 - shouldPutAllWithUnknownTimestamp
 - shouldPutIfAbsentWithUnknownTimestamp
 - shouldPutWithUnknownTimestamp
+- shouldReturnCommitOffsets
 - shouldReturnIsOpen
 - shouldReturnIsPersistent
+- shouldReturnManagedOffsets
 - shouldReturnName
+- shouldReturnPosition
+- shouldReturnQueryResult
 org.apache.kafka.streams.MockProcessorContextTest:
 - fullConstructorShouldSetAllExpectedAttributes
+- shouldCaptureAnchoredPunctuator
 - shouldCaptureApplicationAndRecordMetadata
 - shouldCaptureCommitsAndAllowReset
 - shouldCaptureOutputRecords
@@ -68,6 +74,7 @@ org.apache.kafka.streams.TopologyTestDriverAtLeastOnceTest:
 - shouldInitProcessor
 - shouldNotCreateStateDirectoryForStatelessTopology
 - shouldNotRequireParameters
+- shouldNotResetRecordContextWhenAccessingStateStore
 - shouldNotUpdateStoreForLargerValue
 - shouldNotUpdateStoreForSmallerValue
 - shouldPassRecordHeadersIntoSerializersAndDeserializers
@@ -92,6 +99,7 @@ org.apache.kafka.streams.TopologyTestDriverAtLeastOnceTest:
 - shouldThrowIfPersistentBuiltInStoreIsAccessedWithUntypedMethod
 - shouldThrowNoSuchElementExceptionForUnusedOutputTopicWithDynamicRouting
 - shouldThrowPatternNotValidForTopicNameException
+- shouldThrowWhenConfigIsNull
 - shouldUpdateStoreForNewKey
 - shouldUseSinkSpecificSerializers
 - shouldUseSourceSpecificDeserializers
@@ -111,6 +119,7 @@ org.apache.kafka.streams.TopologyTestDriverEosTest:
 - shouldInitProcessor
 - shouldNotCreateStateDirectoryForStatelessTopology
 - shouldNotRequireParameters
+- shouldNotResetRecordContextWhenAccessingStateStore
 - shouldNotUpdateStoreForLargerValue
 - shouldNotUpdateStoreForSmallerValue
 - shouldPassRecordHeadersIntoSerializersAndDeserializers
@@ -135,17 +144,26 @@ org.apache.kafka.streams.TopologyTestDriverEosTest:
 - shouldThrowIfPersistentBuiltInStoreIsAccessedWithUntypedMethod
 - shouldThrowNoSuchElementExceptionForUnusedOutputTopicWithDynamicRouting
 - shouldThrowPatternNotValidForTopicNameException
+- shouldThrowWhenConfigIsNull
 - shouldUpdateStoreForNewKey
 - shouldUseSinkSpecificSerializers
 - shouldUseSourceSpecificDeserializers
 org.apache.kafka.streams.WindowStoreFacadeTest:
+- shouldFetchAllTimeRangeAndConvertValues
+- shouldFetchKeyRangeTimeRangeAndConvertValues
+- shouldFetchTimeRangeAndConvertValues
 - shouldForwardClose
+- shouldForwardCommit
 - shouldForwardFlush
 - shouldForwardInit
 - shouldPutWindowStartTimestampWithUnknownTimestamp
+- shouldReturnCommitOffsets
 - shouldReturnIsOpen
 - shouldReturnIsPersistent
+- shouldReturnManagedOffsets
 - shouldReturnName
+- shouldReturnPosition
+- shouldReturnQueryResult
 org.apache.kafka.streams.test.MockProcessorContextAPITest:
 - fullConstructorShouldSetAllExpectedAttributes
 - shouldCaptureApplicationAndRecordMetadata
@@ -155,16 +173,27 @@ org.apache.kafka.streams.test.MockProcessorContextAPITest:
 - shouldCaptureRecordsOutputToChildByName
 - shouldStoreAndReturnStateStores
 org.apache.kafka.streams.test.MockProcessorContextStateStoreTest:
-- shouldEitherInitOrThrow
+- shouldWorkForAllStoreTypeAndSetups
 org.apache.kafka.streams.test.TestRecordTest:
 - testConsumerRecord
+- testConsumerRecordWithNegativePartition
+- testConsumerRecordWithNoTimestamp
 - testEqualsAndHashCode
+- testEqualsConsidersPartition
+- testEqualsIgnorePartition
+- testExplicitNoPartitionConstructor
+- testExplicitPartitionConstructor
 - testFields
+- testInvalidNegativePartitionConstructor
 - testInvalidRecords
 - testMultiFieldMatcher
 - testPartialConstructorEquals
+- testPartitionDefaultsToUnset
 - testProducerRecord
+- testProducerRecordWithNullTimestamp
+- testProducerRecordWithoutPartition
 - testToString
+- testToStringIncludesPartitionWhenSet
 org.apache.kafka.streams.test.wordcount.WindowedWordCountProcessorTest:
 - shouldWorkWithInMemoryStore
 - shouldWorkWithPersistentStore
